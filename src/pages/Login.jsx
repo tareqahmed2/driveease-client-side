@@ -42,44 +42,34 @@ const Login = () => {
     setError("");
 
     signInUser(email, password, navigate)
-      .then((result) => {
-        console.log("sign in", result.user);
-        navigate("/home");
-      })
-      .catch((error) => {
-        console.error("Sign in error:", error);
-        setError("Failed to sign in. Please try again.");
-      });
+      .then(() => navigate("/home"))
+      .catch(() => setError("Failed to sign in. Please try again."));
   };
 
-  // Demo login function
   const handleDemoLogin = () => {
     const demoEmail = "tareqahmed347396@gmail.com";
     const demoPassword = "tareq123";
 
     signInUser(demoEmail, demoPassword, navigate)
-      .then((result) => {
-        console.log("Demo sign in", result.user);
-        navigate("/home");
-      })
-      .catch((error) => {
-        console.error("Demo sign in error:", error);
-        setError("Failed to sign in. Please try again.");
-      });
+      .then(() => navigate("/home"))
+      .catch(() => setError("Failed to sign in. Please try again."));
   };
 
   return (
-    <div className="px-6 flex justify-center items-center my-10 mx-5">
+    <div className="px-6 flex justify-center items-center my-10">
       <Helmet>
         <title>DriveEase | Login</title>
-        <link rel="canonical" href="https://www.tacobell.com/" />
       </Helmet>
-      <div className="card bg-base-100 w-full md:w-3/4 lg:w-3/6 px-2 shrink-0 shadow-2xl max-w-7xl">
-        <h2 className="text-2xl my-10 font-bold text-center mb-6 text-[#FF00D3]">
-          Login Now!
+
+      <div className="card bg-base-100 w-full md:w-3/4 lg:w-3/6 shadow-xl max-w-2xl">
+        <h2 className="text-2xl my-8 font-bold text-center text-primary">
+          Login Now
         </h2>
+
         <form onSubmit={handleSubmit} className="card-body">
-          {error && <p className="text-red-500 text-center">{error}</p>}
+          {error && (
+            <p className="text-error text-center font-medium">{error}</p>
+          )}
 
           <div className="form-control">
             <label className="label">
@@ -87,10 +77,10 @@ const Login = () => {
             </label>
             <input
               type="email"
+              name="email"
               placeholder="email"
               className="input input-bordered"
               required
-              name="email"
             />
           </div>
 
@@ -98,52 +88,53 @@ const Login = () => {
             <label className="label">
               <span className="label-text">Password</span>
             </label>
+
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="password"
-                className="input w-full input-bordered pr-10"
-                required
                 name="password"
+                placeholder="password"
+                className="input input-bordered w-full pr-10"
+                required
               />
-              <span
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+              <button
+                type="button"
                 onClick={togglePasswordVisibility}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
+              </button>
             </div>
           </div>
 
-          <div className="form-control mt-6">
-            {/* Demo Login Button */}
+          <div className="form-control mt-6 gap-3">
             <button
               type="button"
               onClick={handleDemoLogin}
-              className="btn btn-accent border-none bg-[#FF00D3] mb-5"
+              className="btn btn-secondary"
             >
               Demo Login
             </button>
-            <button className="btn btn-accent border-none bg-[#FF00D3]">
+
+            <button type="submit" className="btn btn-primary">
               Login
             </button>
           </div>
 
           <button
+            type="button"
             onClick={() => signInWithGoogle(navigate)}
-            className="btn flex items-center"
+            className="btn btn-outline mt-4 flex items-center gap-2"
           >
-            <span>
-              <FaGoogle />
-            </span>
+            <FaGoogle />
             Login With Google
           </button>
         </form>
 
-        <div className="flex justify-center items-center">
-          <p className="my-5 font-bold">
+        <div className="text-center pb-6">
+          <p className="font-medium">
             Don't have an account?{" "}
-            <Link className="text-red-500" to="/register">
+            <Link to="/register" className="link link-primary">
               Register
             </Link>
           </p>

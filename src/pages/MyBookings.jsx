@@ -13,11 +13,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-
-import useAxiosSecure from "../hooks/useAxiosSecure";
 import { FaEdit, FaTrash, FaSpinner } from "react-icons/fa";
 import { Helmet } from "react-helmet";
-import { useTheme } from "next-themes";
 
 ChartJS.register(
   CategoryScale,
@@ -32,335 +29,162 @@ ChartJS.register(
 const MyBookings = () => {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modifiedBooking, setModifiedBooking] = useState(null);
-  const [newBookingDate, setNewBookingDate] = useState("");
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [bookingToCancel, setBookingToCancel] = useState(null);
-  const [startUpdateDate, setStartUpdateDate] = useState(null);
-  const [endUpdateDate, setEndUpdateDate] = useState(null);
-  const axiosSecure = useAxiosSecure();
   const [loading, setLoading] = useState(true);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [startUpdateDate, setStartUpdateDate] = useState("");
+  const [endUpdateDate, setEndUpdateDate] = useState("");
+
   useEffect(() => {
     setLoading(true);
     axios
-      // .get(`https://assignment11-server-side-mu.vercel.app/all-bookings/${user.email}`)
       .get(
         `https://assignment11-server-side-mu.vercel.app/all-bookings/${user.email}`
       )
-      .then((res) => {
-        setBookings(res.data);
-        setLoading(false);
-      })
-      .catch((err) => console.error(err));
+      .then((res) => setBookings(res.data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [user.email]);
-  const handleModifyData = (booking) => {
-    setModifiedBooking(booking);
-    setNewBookingDate(booking.dateAdded);
-    setIsModalOpen(true);
-  };
 
-  const isValidDateFormat = (dateString) => {
-    const regex = /^\d{2}-\d{2}-\d{4}$/;
-    return regex.test(dateString);
-  };
+  const isValidDate = (date) => /^\d{2}-\d{2}-\d{4}$/.test(date);
 
-  const handleSaveModifiedData = () => {
-    if (!startUpdateDate || !endUpdateDate) {
-      Swal.fire("Error", "Please select both new start and end dates", "error");
-      return;
-    }
-
-    if (
-      !isValidDateFormat(startUpdateDate) ||
-      !isValidDateFormat(endUpdateDate)
-    ) {
-      Swal.fire(
-        "Error",
-        "Please enter valid dates in DD-MM-YYYY format",
-        "error"
-      );
-      return;
-    }
-
-    const startDateObj = new Date(
-      startUpdateDate.split("-").reverse().join("-")
-    );
-    const endDateObj = new Date(endUpdateDate.split("-").reverse().join("-"));
-
-    if (endDateObj < startDateObj) {
-      Swal.fire("Error", "End date cannot be earlier than start date", "error");
+  const handleSaveUpdate = () => {
+    if (!isValidDate(startUpdateDate) || !isValidDate(endUpdateDate)) {
+      Swal.fire("Error", "Date must be DD-MM-YYYY", "error");
       return;
     }
 
     axios
       .patch(
-        `https://assignment11-server-side-mu.vercel.app/updateBooking/${modifiedBooking._id}`,
+        `https://assignment11-server-side-mu.vercel.app/updateBooking/${selectedBooking._id}`,
         {
           startDate: startUpdateDate,
           endDate: endUpdateDate,
         }
       )
-      .then((res) => {
-        Swal.fire("Success", "Booking modified successfully", "success");
+      .then(() => {
+        Swal.fire("Updated", "Booking updated successfully", "success");
         setBookings((prev) =>
-          prev.map((booking) =>
-            booking._id === modifiedBooking._id
-              ? {
-                  ...booking,
-                  startDate: startUpdateDate,
-                  endDate: endUpdateDate,
-                }
-              : booking
+          prev.map((b) =>
+            b._id === selectedBooking._id
+              ? { ...b, startDate: startUpdateDate, endDate: endUpdateDate }
+              : b
           )
         );
-        setIsModalOpen(false);
+        setIsEditModalOpen(false);
       })
-      .catch((err) => console.error(err));
-  };
-
-  const handleCancelBooking = (booking) => {
-    setBookingToCancel(booking);
-    setIsCancelModalOpen(true);
+      .catch(console.error);
   };
 
   const confirmCancelBooking = () => {
-    if (bookingToCancel.bookingStatus === "Cancelled") {
-      Swal.fire(
-        "Already Cancelled",
-        "This booking has already been cancelled.",
-        "info"
-      );
-      return;
-    }
     axios
       .patch(
-        `https://assignment11-server-side-mu.vercel.app/updateStatus/${bookingToCancel._id}`
+        `https://assignment11-server-side-mu.vercel.app/updateStatus/${selectedBooking._id}`
       )
-      .then((res) => {
-        Swal.fire("Cancelled!", "Your booking has been cancelled.", "success");
-
-        setBookings((prevBookings) =>
-          prevBookings.map((booking) =>
-            booking._id === bookingToCancel._id
-              ? { ...booking, bookingStatus: "Cancelled" }
-              : booking
+      .then(() => {
+        Swal.fire("Cancelled", "Booking cancelled", "success");
+        setBookings((prev) =>
+          prev.map((b) =>
+            b._id === selectedBooking._id
+              ? { ...b, bookingStatus: "Cancelled" }
+              : b
           )
         );
-
         setIsCancelModalOpen(false);
       })
-      .catch((err) => console.error(err));
-    axios
-      .patch(
-        `https://assignment11-server-side-mu.vercel.app/updateAvailableBookingCount/${bookingToCancel.CarId}`
-      )
-      .then((res) => console.log(res.data));
-  };
-
-  const calculateDuration = (dateAdded, currentDate) => {
-    const addedDate = new Date(dateAdded);
-    const nowDate = new Date(currentDate);
-
-    const durationMs = nowDate - addedDate;
-    const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (durationMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
-    const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-
-    return `${days}d ${hours}h ${minutes}m`;
+      .catch(console.error);
   };
 
   const chartData = {
-    labels: bookings.map((booking) => booking.carModel),
+    labels: bookings.map((b) => b.carModel),
     datasets: [
       {
         label: "Daily Rental Price",
-        data: bookings.map((booking) => booking.dailyRentalPrice),
-        borderColor: "rgba(75, 192, 192, 1)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        data: bookings.map((b) => b.dailyRentalPrice),
+        borderColor: "hsl(var(--p))",
+        backgroundColor: "hsl(var(--p) / 0.2)",
         fill: true,
       },
     ],
   };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <FaSpinner className="animate-spin text-3xl" />
+        <FaSpinner className="animate-spin text-4xl text-primary" />
       </div>
     );
   }
-  const { theme } = useTheme();
+
   return (
-    <div className="max-w-7xl mx-auto p-6 my-10">
+    <div className="max-w-7xl mx-auto p-6 my-10 text-base-content">
       <Helmet>
-        <title>DriveEase | My Booking</title>
-        <link rel="canonical" href="https://www.tacobell.com/" />
+        <title>DriveEase | My Bookings</title>
       </Helmet>
 
-      <h2 className="text-3xl text-center text-purple-600 font-semibold mb-6">
+      <h2 className="text-3xl text-center font-semibold mb-8 text-primary">
         My Bookings
       </h2>
-      <div className="overflow-x-auto mb-6">
-        <table className="table-auto w-full border-collapse border border-gray-200">
+
+      {/* Table */}
+      <div className="overflow-x-auto mb-10">
+        <table className="table table-zebra">
           <thead>
-            <tr className="bg-blue-400 text-white">
-              <th
-                className={`border px-4 py-2 font-semibold whitespace-nowrap ${
-                  theme === "light" ? "text-gray-800" : "text-white"
-                }`}
-              >
-                Car Image
-              </th>
-              <th
-                className={`border px-4 py-2 font-semibold whitespace-nowrap ${
-                  theme === "light" ? "text-gray-800" : "text-white"
-                }`}
-              >
-                Car Model
-              </th>
-              <th
-                className={`border px-4 py-2 font-semibold whitespace-nowrap ${
-                  theme === "light" ? "text-gray-800" : "text-white"
-                }`}
-              >
-                Daily Price
-              </th>
-              <th
-                className={`border px-4 py-2 font-semibold whitespace-nowrap ${
-                  theme === "light" ? "text-gray-800" : "text-white"
-                }`}
-              >
-                Booking Date
-              </th>
-              <th
-                className={`border px-4 py-2 font-semibold whitespace-nowrap ${
-                  theme === "light" ? "text-gray-800" : "text-white"
-                }`}
-              >
-                Start Date
-              </th>
-              <th
-                className={`border px-4 py-2 font-semibold whitespace-nowrap ${
-                  theme === "light" ? "text-gray-800" : "text-white"
-                }`}
-              >
-                End Date
-              </th>
-              <th
-                className={`border px-4 py-2 font-semibold whitespace-nowrap ${
-                  theme === "light" ? "text-gray-800" : "text-white"
-                }`}
-              >
-                Total Price
-              </th>
-              <th
-                className={`border px-4 py-2 font-semibold whitespace-nowrap ${
-                  theme === "light" ? "text-gray-800" : "text-white"
-                }`}
-              >
-                Booking Status
-              </th>
-              <th
-                className={`border px-4 py-2 font-semibold whitespace-nowrap ${
-                  theme === "light" ? "text-gray-800" : "text-white"
-                }`}
-              >
-                Actions
-              </th>
+            <tr>
+              <th>Car</th>
+              <th>Model</th>
+              <th>Price/Day</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {bookings.map((booking, index) => (
-              <tr
-                key={booking._id}
-                className={`${
-                  index % 2 === 0 ? "bg-purple-400" : "bg-sky-500"
-                } hover:bg-blue-200 transition-colors`}
-              >
-                <td
-                  className={`${
-                    theme === "light" ? "text-gray-800" : "text-white"
-                  }
-                  border px-4 py-2 whitespace-nowrap`}
-                >
+            {bookings.map((b) => (
+              <tr key={b._id}>
+                <td>
                   <img
-                    src={booking.imageURL}
-                    alt={booking.carModel}
-                    className="w-20 h-20 object-cover rounded-lg"
+                    src={b.imageURL}
+                    alt=""
+                    className="w-16 h-16 rounded object-cover"
                   />
                 </td>
+                <td>{b.carModel}</td>
+                <td>${b.dailyRentalPrice}</td>
+                <td>{b.startDate}</td>
+                <td>{b.endDate}</td>
+                <td>${b.totalPrice.toFixed(2)}</td>
                 <td
-                  className={`${
-                    theme === "light" ? "text-gray-800" : "text-white"
+                  className={
+                    b.bookingStatus === "Cancelled"
+                      ? "text-error"
+                      : "text-success"
                   }
-                  border px-4 py-2 whitespace-nowrap`}
                 >
-                  {booking.carModel}
+                  {b.bookingStatus}
                 </td>
-                <td
-                  className={`${
-                    theme === "light" ? "text-gray-800" : "text-white"
-                  }
-                  border px-4 py-2 whitespace-nowrap`}
-                >
-                  ${booking.dailyRentalPrice}
-                </td>
-                <td
-                  className={`${
-                    theme === "light" ? "text-gray-800" : "text-white"
-                  }
-                  border px-4 py-2 whitespace-nowrap`}
-                >
-                  {booking.currentDate}
-                </td>
-                <td
-                  className={`${
-                    theme === "light" ? "text-gray-800" : "text-white"
-                  }
-                  border px-4 py-2 whitespace-nowrap`}
-                >
-                  {booking.startDate}
-                </td>
-                <td
-                  className={`${
-                    theme === "light" ? "text-gray-800" : "text-white"
-                  }
-                  border px-4 py-2 whitespace-nowrap`}
-                >
-                  {booking.endDate}
-                </td>
-                <td
-                  className={`${
-                    theme === "light" ? "text-gray-800" : "text-white"
-                  }
-                  border px-4 py-2 whitespace-nowrap`}
-                >
-                  ${booking.totalPrice.toFixed(2)}
-                </td>
-                <td
-                  className={`${
-                    theme === "light" ? "text-gray-800" : "text-white"
-                  }
-                  border px-4 py-2 whitespace-nowrap`}
-                >
-                  {booking.bookingStatus}
-                </td>
-                <td className=" px-4 py-2 whitespace-nowrap flex   space-x-2">
+                <td className="flex gap-2">
                   <button
-                    onClick={() => handleModifyData(booking)}
-                    className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-                    aria-label="Modify Booking"
+                    className="btn btn-xs btn-info"
+                    onClick={() => {
+                      setSelectedBooking(b);
+                      setIsEditModalOpen(true);
+                    }}
                   >
-                    <FaEdit size={18} />
+                    <FaEdit />
                   </button>
                   <button
-                    onClick={() => handleCancelBooking(booking)}
-                    className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
-                    aria-label="Cancel Booking"
+                    className="btn btn-xs btn-error"
+                    onClick={() => {
+                      setSelectedBooking(b);
+                      setIsCancelModalOpen(true);
+                    }}
                   >
-                    <FaTrash size={18} />
+                    <FaTrash />
                   </button>
                 </td>
               </tr>
@@ -368,94 +192,65 @@ const MyBookings = () => {
           </tbody>
         </table>
       </div>
-      <div className="">
+
+      {/* Chart */}
+      <div className="bg-base-200 p-6 rounded-xl shadow">
         <Line data={chartData} />
       </div>
-      {isModalOpen && (
-        <div className="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50">
-          <div
-            className={` p-6 rounded-lg ${
-              theme === "light" ? "bg-white" : "bg-gray-800"
-            }`}
-          >
-            <h2
-              className={`text-2xl font-semibold mb-4 ${
-                theme === "light" ? "text-gray-800" : "text-white"
-              }`}
-            >
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-base-100 p-6 rounded-xl w-full max-w-md">
+            <h3 className="text-xl font-semibold mb-4 text-primary">
               Modify Booking
-            </h2>
-            <label
-              className={`text-sm font-semibold mb-4 ${
-                theme === "light" ? "text-gray-800" : "text-white"
-              }`}
-            >
-              New Start Date
-            </label>
+            </h3>
+
             <input
-              type="text"
-              id="startDate"
-              placeholder="DD-MM-YYYY"
+              className="input input-bordered w-full mb-3"
+              placeholder="Start Date (DD-MM-YYYY)"
               onChange={(e) => setStartUpdateDate(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
             />
-            <label
-              className={`text-sm font-semibold mb-4 ${
-                theme === "light" ? "text-gray-800" : "text-white"
-              }`}
-            >
-              New End Date
-            </label>
             <input
-              type="text"
-              id="endDate"
-              placeholder="DD-MM-YYYY"
+              className="input input-bordered w-full mb-4"
+              placeholder="End Date (DD-MM-YYYY)"
               onChange={(e) => setEndUpdateDate(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
             />
-            <div className="flex justify-between">
+
+            <div className="flex justify-end gap-3">
               <button
-                onClick={() => setIsModalOpen(false)}
-                className="bg-gray-500 text-white px-4 py-2 my-3 rounded"
+                className="btn btn-outline"
+                onClick={() => setIsEditModalOpen(false)}
               >
                 Cancel
               </button>
-              <button
-                onClick={handleSaveModifiedData}
-                className="bg-blue-500 text-white px-4 py-2 my-3 rounded"
-              >
+              <button className="btn btn-primary" onClick={handleSaveUpdate}>
                 Save
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Cancel Modal */}
       {isCancelModalOpen && (
-        <div className="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50">
-          <div
-            className={` p-6 rounded-lg ${
-              theme === "light" ? "bg-white" : "bg-gray-800"
-            }`}
-          >
-            <h2
-              className={`text-2xl font-semibold mb-4 ${
-                theme === "light" ? "text-gray-800" : "text-white"
-              }`}
-            >
-              Are you sure you want to cancel this booking?
-            </h2>
-            <div className="flex justify-between">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-base-100 p-6 rounded-xl w-full max-w-md">
+            <h3 className="text-xl font-semibold mb-6">
+              Cancel this booking?
+            </h3>
+            <div className="flex justify-end gap-3">
               <button
+                className="btn btn-outline"
                 onClick={() => setIsCancelModalOpen(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded"
               >
                 No
               </button>
               <button
+                className="btn btn-error"
                 onClick={confirmCancelBooking}
-                className="bg-red-500 text-white px-4 py-2 rounded"
               >
-                Yes
+                Yes, Cancel
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaFacebookF,
   FaTwitter,
@@ -6,105 +7,65 @@ import {
   FaLinkedinIn,
 } from "react-icons/fa";
 import logo from "../assets/driveease.jpeg";
-import { useTheme } from "next-themes";
-import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
   const navigate = useNavigate();
-  const { theme } = useTheme(); // Hook for managing theme
 
   return (
-    <footer
-      className={`py-10 ${
-        theme === "light"
-          ? "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"
-          : "bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900"
-      } text-white`}
-    >
-      <div className="max-w-7xl mx-auto text-center px-6">
-        {/* Logo and Website Name */}
+    <footer className="bg-base-200 text-base-content">
+      <div className="max-w-7xl mx-auto px-6 py-12 text-center">
+        {/* Logo */}
         <div className="mb-6">
           <img
-            onClick={() => navigate("/")}
             src={logo}
-            alt="Website Logo"
-            className="mx-auto w-16 h-16 mb-3 rounded-full border-2 border-gray-700"
+            alt="DriveEase Logo"
+            onClick={() => navigate("/")}
+            className="mx-auto w-16 h-16 rounded-full cursor-pointer shadow-md ring ring-primary ring-offset-base-200 ring-offset-2"
           />
-          <h2
-            className={`text-2xl font-bold tracking-wider ${
-              theme === "light" ? "text-gray-800" : "text-gray-100"
-            }`}
-          >
-            DriveEase
-          </h2>
+          <h2 className="text-2xl font-bold mt-3">DriveEase</h2>
         </div>
 
         {/* Divider */}
-        <div
-          className={`border-t my-6 ${
-            theme === "light" ? "border-gray-400" : "border-gray-700"
-          }`}
-        ></div>
+        <div className="divider"></div>
 
-        {/* Copyright Information */}
-        <p
-          className={`text-sm mb-6 ${
-            theme === "light" ? "text-gray-700" : "text-gray-300"
-          }`}
-        >
+        {/* Copyright */}
+        <p className="text-sm opacity-80 mb-6">
           © {new Date().getFullYear()}{" "}
           <span className="font-semibold">DriveEase</span>. All Rights Reserved.
         </p>
 
-        {/* Social Media Links */}
-        <div className="flex justify-center space-x-6">
+        {/* Social Icons */}
+        <div className="flex justify-center gap-6">
           <a
             href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${
-              theme === "light" ? "text-gray-600" : "text-gray-400"
-            } hover:${
-              theme === "light" ? "text-blue-400" : "text-blue-400"
-            } transition transform hover:scale-110`}
+            aria-label="Facebook"
+            className="btn btn-circle btn-outline btn-primary hover:scale-110 transition-transform"
           >
-            <FaFacebookF size={24} />
+            <FaFacebookF />
           </a>
+
           <a
             href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${
-              theme === "light" ? "text-gray-600" : "text-gray-400"
-            } hover:${
-              theme === "light" ? "text-blue-400" : "text-blue-400"
-            } transition transform hover:scale-110`}
+            aria-label="Twitter"
+            className="btn btn-circle btn-outline btn-info hover:scale-110 transition-transform"
           >
-            <FaTwitter size={24} />
+            <FaTwitter />
           </a>
+
           <a
             href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${
-              theme === "light" ? "text-gray-600" : "text-gray-400"
-            } hover:${
-              theme === "light" ? "text-pink-400" : "text-pink-400"
-            } transition transform hover:scale-110`}
+            aria-label="Instagram"
+            className="btn btn-circle btn-outline btn-secondary hover:scale-110 transition-transform"
           >
-            <FaInstagram size={24} />
+            <FaInstagram />
           </a>
+
           <a
             href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${
-              theme === "light" ? "text-gray-600" : "text-gray-400"
-            } hover:${
-              theme === "light" ? "text-blue-500" : "text-blue-500"
-            } transition transform hover:scale-110`}
+            aria-label="LinkedIn"
+            className="btn btn-circle btn-outline btn-accent hover:scale-110 transition-transform"
           >
-            <FaLinkedinIn size={24} />
+            <FaLinkedinIn />
           </a>
         </div>
       </div>

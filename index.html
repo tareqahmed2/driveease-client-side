@@ -1,13 +1,20 @@
 <!DOCTYPE html>
-<html data-theme="dark" lang="en">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link
+
+    <!-- EARLY THEME APPLY (NO FLASH) -->
+    <script>
+      const theme = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", theme);
+    </script>
+   <link
       rel="shortcut icon"
       href="src/assets/driveease.jpeg"
       type="image/x-icon"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>DriveEase</title>
   </head>
   <body>

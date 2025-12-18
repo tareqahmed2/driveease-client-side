@@ -2,13 +2,13 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import useAuth from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
 
 const RecentListings = () => {
   const [cars, setCars] = useState([]);
   const { setLoading } = useAuth();
   setLoading(true);
   const navigate = useNavigate();
+
   useEffect(() => {
     axios
       .get("https://assignment11-server-side-mu.vercel.app/all-cars")
@@ -17,7 +17,9 @@ const RecentListings = () => {
       })
       .catch((error) => console.error("Error fetching cars:", error));
   }, []);
+
   setLoading(false);
+
   const calculateDaysAgo = (dateAdded) => {
     if (!dateAdded) {
       return "Date not available";
@@ -65,83 +67,65 @@ const RecentListings = () => {
       return "Error calculating days ago";
     }
   };
+
   const handleNavigate = () => {
     navigate("/available-cars");
-    window.scrollTo(0, 0); // Scroll to the top of the page
+    window.scrollTo(0, 0);
   };
-  const { theme } = useTheme();
+
   return (
     <section className="my-16 px-6 max-w-7xl mx-auto">
-      <h2 className="text-4xl text-purple-800 font-semibold text-center mb-4">
+      <h2 className="text-4xl text-primary font-semibold text-center mb-4">
         Recent Listings
       </h2>
-      <p
-        className={` text-xl text-center  mb-12 ${
-          theme === "light" ? "text-gray-600" : "text-white"
-        }`}
-      >
+
+      <p className="text-xl text-center mb-12 text-base-content/70">
         Explore our recent listings of top-quality, well-maintained vehicles,
         perfect for every journey and occasion.
       </p>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-12">
         {cars.map((car) => (
           <div
             key={car._id}
-            className={` shadow-lg rounded-lg overflow-hidden transform hover:scale-105 hover:shadow-2xl transition-transform duration-300 ${
-              theme === "light" ? "bg-white" : "bg-gray-800"
-            }`}
+            className="card bg-base-100 shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300"
           >
             <img
               src={car.imageURL}
               alt={car.carModel}
               className="w-full h-48 object-cover"
             />
-            {/* <div
-              className="w-full h-48  bg-no-repeat bg-center"
-              style={{ backgroundImage: `url(${car.imageURL})` }}
-            ></div> */}
+
             <div className="p-4">
-              <h3
-                className={` text-xl mb-2 ${
-                  theme === "light" ? "text-gray-600" : "text-white"
-                }`}
-              >
+              <h3 className="text-xl mb-2 text-base-content">
                 {car.carModel}
               </h3>
-              <p
-                className={` mb-2 ${
-                  theme === "light" ? "text-gray-600" : "text-white"
-                }`}
-              >
+
+              <p className="mb-2 text-base-content">
                 Per Day Price: ${car.dailyRentalPrice}/day
-              </p>
-              <p
-                className={`text-sm font-medium ${
-                  car.availability === "Available"
-                    ? "text-green-500"
-                    : "text-red-500"
-                } mb-2`}
-              >
-                {car.availability}
-              </p>
-              <p
-                className={`text-sm mb-2 ${
-                  theme === "light" ? "text-gray-600" : "text-white"
-                }`}
-              >
-                Booking Count:{car.bookingCount}
               </p>
 
               <p
-                className={`text-sm mb-2 ${
-                  theme === "light" ? "text-gray-600" : "text-white"
+                className={`text-sm font-medium mb-2 ${
+                  car.availability === "Available"
+                    ? "text-success"
+                    : "text-error"
                 }`}
               >
+                {car.availability}
+              </p>
+
+              <p className="text-sm mb-2 text-base-content">
+                Booking Count: {car.bookingCount}
+              </p>
+
+              <p className="text-sm mb-2 text-base-content">
                 {calculateDaysAgo(car.dateAdded)}
               </p>
+
               <button
-                onClick={() => handleNavigate()}
-                className="btn btn-primary my-3 hover:btn-success"
+                onClick={handleNavigate}
+                className="btn btn-primary my-3"
               >
                 See More...
               </button>

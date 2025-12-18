@@ -1,39 +1,32 @@
-import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
-import SunIcon from "../assets/SunIcon";
-import MoonIcon from "../assets/MoonIcon";
+import { useEffect, useState } from "react";
+import { FaSun, FaMoon } from "react-icons/fa";
 
+/* Only light & dark toggle (daisyUI based) */
 export default function Theme() {
-  const { systemTheme, theme, setTheme } = useTheme();
-  const [hasMounted, setHasMounted] = useState(false);
-
-  // Default to dark theme if systemTheme is 'dark'
-  const currentTheme = theme;
+  const [theme, setTheme] = useState(
+    localStorage.getItem("theme") || "light"
+  );
 
   useEffect(() => {
-    setHasMounted(true);
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
-    //change body bg
-    document.body.style.backgroundColor =
-      currentTheme === "light" ? "#FFFFFF" : "#1D232A";
-  }, [currentTheme]);
-
-  if (!hasMounted)
-    return (
-      <span className="animate-pulse min-w-[28px] min-h-[28px] p-2 rounded-full dark:bg-zinc-800 bg-zinc-200 border dark:border-zinc-700 border-zinc-300"></span>
-    );
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
 
   return (
     <button
-      onClick={() =>
-        currentTheme === "light" ? setTheme("dark") : setTheme("light")
-      }
-      className={`dark:bg-primary-bg bg-zinc-100 dark:text-primary-color text-zinc-500 border dark:border-zinc-800 border-zinc-200 rounded-full p-2 duration-300 transition-transform group ${
-        currentTheme === "light" ? "-rotate-180" : "rotate-0"
-      }`}
+      onClick={toggleTheme}
       aria-label="Toggle Theme"
+      className="btn btn-ghost btn-circle hover:rotate-12 transition-transform"
     >
-      {currentTheme === "light" ? <SunIcon /> : <MoonIcon />}
+      {theme === "light" ? (
+        <FaMoon className="text-xl" />
+      ) : (
+        <FaSun className="text-xl" />
+      )}
     </button>
   );
 }
